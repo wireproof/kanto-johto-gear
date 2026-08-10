@@ -1,232 +1,124 @@
-# Kanto Gear
+# Kanto + Johto Gear
 
-Kanto Gear turns a supported dual-screen Android handheld into a Gen 1
-companion: the game stays on the main display while maps, party information,
-battles, menus and contextual touch controls move to the second display.
+Kanto + Johto Gear is an unofficial dual-screen companion mod for supported
+Gen1Recomp and Gen2Recomped Android hosts. It keeps the game on one display
+while maps, party information, battles, PC menus and contextual touch controls
+use the second display.
 
 > [!IMPORTANT]
-> This is an **unofficial Android public test build**, not an official
-> Gen1Recomp release. It is verified on an **AYN Thor running Android 13** and
-> community-tested on a **Retroid Pocket 5 with the Retroid Dual Screen Add-on**.
-> Other handhelds, docks and HDMI setups still need community testing.
+> This is an independent, AI-assisted compatibility fork maintained by
+> [wireproof](https://github.com/wireproof). It is not an official
+> Gen1Recomp, Gen2Recomped, Pokemon or Nintendo release. No ROM, save file or
+> ROM-extracted game data is included.
+
+The public project uses one combined name. In-game, the compact companion
+header changes to **KANTO GEAR** for Generation I and **JOHTO GEAR** for
+Generation II.
+
+## Current release
+
+**1.0.0-beta.1** is the first release in this fork's independent version
+series. It is a beta because the Android bridge and mod pass automated tests
+but still need broader testing on physical dual-screen devices.
+
+| Game | Region support | Status |
+| --- | --- | --- |
+| Pokemon Red, Blue and Yellow | Kanto | Supported with a matching Gen1 Kanto Gear host |
+| Pokemon Gold and Silver | Johto and postgame Kanto | Supported with the matching custom Gen2Recomped host |
+| Pokemon Crystal | Johto and Kanto | Not currently claimed by the Gen2Recomped base |
 
 ![The Pokemon Lab rendered on the main display](kanto-gear-lab-2026.png)
 
 <p align="center">
-  <img src="kanto-gear-map-2026.png" width="48%" alt="Kanto Gear map on the second display">
-  <img src="kanto-gear-party-2026.png" width="48%" alt="Kanto Gear party summary on the second display">
+  <img src="kanto-gear-map-2026.png" width="48%" alt="Region map on the companion display">
+  <img src="kanto-gear-party-2026.png" width="48%" alt="Party summary on the companion display">
 </p>
 
 ## What it does
 
-- Shows a touchable Kanto map, party, step counter, field tools, area data and
-  an optional guide on the second display.
+- Shows a touchable regional map, local map, party, Trainer Card, field tools,
+  area encounters and optional guide on the companion display.
+- Supports Johto/Kanto landmarks, all 16 Gold/Silver badges, 14 Gen2 PC boxes,
+  and morning/day/night encounters.
+- Exposes contextual Gen2 actions including Headbutt, Rock Smash, Sweet Scent,
+  Whirlpool and Waterfall when the live game state permits them.
 - Moves battle choices, move learning, dialogue choices and PC lists to the
-  second display when those screens are active.
-- Can hide duplicated battle UI on the main display. On the tested Thor, the
-  main UI returns immediately when the second display is switched off.
-- Offers `AUTO`, `HANDHELD` and `EXTERNAL` display targeting for handheld,
-  docked and TV-style layouts.
-- Swaps the game and Kanto Gear between connected screens live with **Y** and
-  returns the game to the remaining display if one screen is switched off or
-  disconnected.
-- Uses the host's detailed map tiles for clearer local maps, adapts zoom for
-  long or narrow routes, warns below 20% battery, shows when the device is
-  charging, and lets players hide Kanto Gear's own caught marker independently
-  of other mods.
-- Works without the Voxel Mod. The matching Voxel performance fork is an
-  optional visual upgrade.
+  companion display when configured.
+- Supports live display targeting and screen swapping on compatible Android
+  hardware.
+- Retains Generation I behavior on a matching Gen1 host.
 
-## Which downloads do I need?
+## Required components
 
-Use this matched release set:
+Kanto + Johto Gear uses two coordinated repositories:
 
-| Download | Required? | What it provides |
-| --- | --- | --- |
-| [`gen1recomp-android-0.1.75-kanto.6.apk`](https://github.com/AverageConsumer/gen1recomp/releases/tag/v0.1.75-kanto.6) | **Required** | Clean upstream-based Android host with the dual-display bridge, live screen swap and detailed-map interface |
-| [`Kanto-Gear-Mod-1.7.0.zip`](https://github.com/AverageConsumer/kanto-gear/releases/tag/v1.7.0) | **Required** | Kanto Gear itself |
-| [`DRAMATIC_SHAPE-1.7.0-android.1.zip`](https://github.com/AverageConsumer/DramaticShapeVoxelMod/releases/tag/v1.7.0-android.1) | Optional | Tested Android 3D renderer and Stadium compatibility fixes |
+1. [`wireproof/kanto-johto-gear`](https://github.com/wireproof/kanto-johto-gear)
+   contains this mod.
+2. [`wireproof/Gen2Recomped-Kanto-Johto-Gear`](https://github.com/wireproof/Gen2Recomped-Kanto-Johto-Gear)
+   is the Gen2Recomped fork containing the Android and companion APIs required
+   for Gold and Silver.
 
-The official Gen1Recomp Android release does not yet contain the complete host
-support used by Kanto Gear, so the APK fork is currently required. Kanto Gear
-works without Dramatic Shape. If you already use or want Dramatic Shape on
-Android, use the matching Voxel fork above: it contains companion-screen battle
-HUD fixes that prevent empty gray or translucent panels from remaining on the
-main display when Kanto Gear moves that HUD to the second screen.
+Use matched releases. A stock Gen2Recomped APK does not currently contain all
+of the required companion interfaces.
 
-## Install on Android
+## Install the beta
 
-You need your own supported Pokemon Red, Blue or Yellow ROM. No ROM or
-ROM-extracted game data is included here.
+1. Export or back up any existing saves.
+2. Install the matching Kanto + Johto Gear host APK.
+3. Import your own supported Pokemon Gold or Silver ROM into that app.
+4. Open **Mods**, choose **Import mod .zip**, and select
+   `Kanto-Johto-Gear-Mod-1.0.0-beta.1.zip`.
+5. Enable **Kanto + Johto Gear** and start the game.
 
-> [!IMPORTANT]
-> Use the matched versions above. The host APK and Kanto Gear are required. The
-> Voxel component is optional because Kanto Gear works without Dramatic Shape.
-> If you use Dramatic Shape with Kanto Gear on Android, use the matching fork
-> rather than another Voxel build. Do not substitute the official host or mix
-> versions from different release sets.
+The forked Android host uses its own application ID,
+`com.wireproof.kantojohtogear`, so it installs separately from upstream
+Gen2Recomped. Its saves and imported ROM cache are also separate.
 
-1. Download `gen1recomp-android-0.1.75-kanto.6.apk` from the matching
-   [Gen1Recomp Android test release](https://github.com/AverageConsumer/gen1recomp/releases/tag/v0.1.75-kanto.6)
-   and install it.
-2. Download `Kanto-Gear-Mod-1.7.0.zip` from the matching
-   [Kanto Gear release](https://github.com/AverageConsumer/kanto-gear/releases/tag/v1.7.0).
-3. Start **Gen1Recomp Android Test**, import your ROM, open the **MODS** tab,
-   tap **Import mod .zip**, and choose `Kanto-Gear-Mod-1.7.0.zip`.
-4. Make sure **Kanto Gear** is enabled, then start the game. The companion
-   appears automatically when Android reports a suitable second display.
+## Controls
 
-The Android test host is published by the Gen1Recomp fork, not by Kanto Gear.
-It contains no bundled mods. Its own Android package installs beside the
-official Gen1Recomp app and does not automatically reuse that app's ROM cache
-or saves. Use Gen1Recomp's normal save export/import if you want to move a
-playthrough.
+- Swipe left or right on the companion display to change pages.
+- Tap page controls, party members, moves, field tools and battle choices.
+- Press **Y** to swap the game and companion between displays when supported.
+- Optional L2/R2 page navigation is disabled by default so the mod does not
+  unexpectedly claim controller inputs.
 
-Future APK updates from this fork keep the same package ID and signing key.
-Install a newer APK over the existing **Gen1Recomp Android Test** app to retain
-its app data, ROM cache, saves and settings. Do not uninstall the app when
-updating, and keep an exported save backup while this remains test software.
+## Verification
 
-Android may ask which app may install the downloaded APK. Grant that permission
-only to the browser or file manager you used; disabling device-wide security
-features is not required.
+The beta was checked against Gen1, Gen2 and Johto-shaped fixtures. The targeted
+suites cover mod loading, rendering, pointer ownership, battle actions, maps,
+field tools, PC views and the Android dual-display bridge. Android native code
+was compiled for arm64-v8a, armeabi-v7a and x86_64.
 
-## Optional: Voxel performance fork (Android only)
+Physical AYN Thor testing was not available during development. Please include
+the device, Android version, game version, display order and reproduction steps
+in hardware bug reports.
 
-Kanto Gear does not require the Voxel Mod. However, if you use Dramatic Shape
-together with Kanto Gear on Android, use this matching fork so the moved battle
-HUD is handled correctly. We love the original mod and recommend its official
-release on PC. This fork belongs to the Android Kanto Gear package because
-handhelds need additional frame-pacing and companion-screen compatibility work.
-For the tested Android 3D setup:
+## Versioning
 
-1. Download the latest `.zip` from the
-   [Kanto Gear Voxel performance fork](https://github.com/AverageConsumer/DramaticShapeVoxelMod/releases/tag/v1.7.0-android.1).
-2. If the original Dramatic Shape Voxel Mod is already installed, remove it
-   from the **MODS** tab first. Both versions intentionally use the same mod ID.
-3. Import the performance-fork `.zip` through **MODS → Import mod .zip**.
-   Confirm the experimental-mod warning and enable it.
+This fork starts fresh at `1.0.0-beta.1` and follows semantic versioning:
 
-A fresh setup starts at the tested Thor profile: **VOXEL 35**, **BALANCED**,
-**T-SHIFT 3** and **V-CURVE OFF**. Existing saved choices are never replaced.
+- `1.0.0-beta.2` — another beta fix release.
+- `1.0.0` — first stable release.
+- `1.1.0` — backward-compatible feature release.
+- `2.0.0` — release containing breaking changes.
 
-The fork is based on Dramatic Shape Voxel Mod 1.7.0. Its performance changes
-are promising on the Thor, but they are not claimed to improve every GPU or
-handheld and the fork is not distributed as a PC replacement.
+The underlying Gen2Recomped engine retains its own version independently.
 
-## Using the lower screen
+## Development and publishing
 
-- **Swipe left or right** across the lower screen to move between the map,
-  party, Trainer Card, field tools, area information and guide pages. The
-  Trainer Card combines badges, money, play time, Pokédex progress and steps.
-- **Tap the arrows in the header** for the same navigation without swiping.
-  Horizontal swipes and arrows also move through multi-page Guide and Area
-  views before continuing to the next section.
-- **AREA MAP** defaults to **OFF**. **MAP** adds a swipe page showing
-  the complete current map or floor and your live position; **ENHANCED** also
-  marks exits plus visible and hidden items that have not been collected. The
-  regular region map remains the Fly screen, so tapping its unlocked
-  destinations still works as before. Tap **+ / -** on the local map to toggle
-  a player-centred zoom.
-- **Tap the visible buttons and list entries** to use touch controls.
-- On **PARTY**, each Pokémon shows a thin EXP bar below its HP bar. Tap a card
-  for **STATS** or **SWAP**. Stats opened there stay on the lower screen while
-  the paused game remains visible above; swapping stays locked whenever the
-  overworld is busy.
-- Battles, menus, dialogue choices and other prompts automatically replace
-  the normal page when they need input, then return to it afterward.
-- Categorized battle bags such as Useful Bag update their pocket and items
-  live. Header arrows show when pockets can be changed by controller or touch;
-  ordinary bags keep their normal layout.
+See [GITHUB-PUBLISHING.md](GITHUB-PUBLISHING.md) for the beginner-friendly
+fork, patch, push and release process. See [CHANGELOG.md](CHANGELOG.md) for the
+project history.
 
-## Settings worth knowing
+## Credits and license
 
-- **GEAR SCREEN → AUTO** is the recommended default.
-- **HANDHELD** prefers the other built-in display.
-- **EXTERNAL** prefers an external presentation display for TV-style use.
-- Press **Y** while the companion is connected to swap the game and Kanto
-  Gear between the two displays without restarting.
-- **BATTLE VIEW → STANDARD** keeps the normal game HUD. **GEAR** moves
-  duplicated battle controls to Kanto Gear, while **FULL GEAR** also moves the
-  HP/status panels. The standard split layout remains the default.
-- **INFO → PURIST** hides gameplay-assistance pages; **ENHANCED** enables them.
-- **TRIGGER TABS** lets L2/R2 cycle Kanto Gear pages. It is off by default so
-  other mods remain free to use those controls.
-- With Modern UI installed, open **MOD MENUS → KANTO GEAR** for the same
-  settings without adding another entry to the global options list.
+This fork is based on:
 
-## Tested release set
+- [Kanto Gear](https://github.com/AverageConsumer/kanto-gear) by
+  AverageConsumer.
+- [Gen2Recomped](https://github.com/UNDERdecoded/Gen2Recomped) by UNDERdecoded.
+- Gen1Recomp and the LÖVE Android runtime used by those projects.
 
-| Component | Version | Role |
-| --- | --- | --- |
-| [Kanto Gear](https://github.com/AverageConsumer/kanto-gear) | 1.7.0 public test | Required second-screen mod |
-| [Gen1Recomp Android test fork](https://github.com/AverageConsumer/gen1recomp) | 0.1.75-kanto.6 | Required Android host APK |
-| [Dramatic Shape performance fork](https://github.com/AverageConsumer/DramaticShapeVoxelMod) | 1.7.0-android.1 | Optional Android 3D renderer |
-
-Do not mix arbitrary releases from the three repositories. Each Kanto Gear
-release links the exact set that was tested together.
-
-Automatic updates are disabled for the forked host and both package mods so an
-upstream release cannot silently replace one component. Install future Kanto
-Gear release sets manually as a matched group.
-
-## Known limits
-
-- The AYN Thor is the confirmed reference device. Retroid Pocket 5 support was
-  tested with Retroid's USB-C Dual Screen Add-on. Other Android dual-display
-  hardware, including GammaOS devices, still needs community testing.
-- Desktop and ordinary single-screen builds have no companion display; the mod
-  stays inactive rather than opening another desktop window.
-- External-monitor rotation, unusual three-display layouts and manufacturer
-  Android changes need real-device reports.
-- Fancy water with V-CURVE can fall back to ordinary animated water tiles on
-  the Thor's Adreno GPU. That is in the upstream Voxel water path, not Kanto
-  Gear.
-- This is active playtest software. Keep a normal exported save backup.
-
-## Reporting a problem
-
-Open an issue in the repository that owns the problem:
-
-- second display, touch or Kanto Gear UI → [Kanto Gear issues](https://github.com/AverageConsumer/kanto-gear/issues)
-- app startup or host integration → [Gen1Recomp fork issues](https://github.com/AverageConsumer/gen1recomp/issues)
-- 3D rendering or performance → [Voxel performance fork issues](https://github.com/AverageConsumer/DramaticShapeVoxelMod/issues)
-
-Please include the device, Android version, display setup, installed versions,
-what you expected, what happened, and a screenshot if possible. Do not report
-fork-only problems to the upstream projects unless they reproduce there.
-
-## Project family and credits
-
-The repositories stay separate because they have different owners and release
-cycles:
-
-- **Kanto Gear** contains the second-screen mod, screenshots and main guide.
-- The **Gen1Recomp fork** publishes the separate Android test host APK.
-- The **Dramatic Shape fork** publishes the optional Android renderer mod.
-
-Kanto Gear is built on [Gen1Recomp](https://github.com/bryanthaboi/gen1recomp).
-The optional renderer is built on
-[Dramatic Shape Voxel Mod](https://github.com/DramaticShape/DramaticShapeVoxelMod).
-Their progress, code and project direction remain theirs. These forks exist to
-test additional work without presenting it as official or asking upstream
-users to debug our changes.
-
-Special thanks to [@Rocky5150](https://github.com/Rocky5150) for patiently
-testing the Retroid Pocket 5 dual-screen support, collecting detailed
-diagnostics, and working with us for more than 24 hours to identify and verify
-the Android display-routing fixes.
-
-The optional Modern Light and Modern Dark themes adapt the angular panels,
-dark surfaces, and red-and-blue accents shared by
-[CustCast's Thor UI work](https://github.com/CustCast/PokeRogue-App-Android-Thor).
-Thanks to CustCast for making the original artwork available and inviting its
-use in Kanto Gear.
-
-Kanto Gear's own code is available under the [MIT License](LICENSE). That
-license does not replace or extend the licenses, rights or ownership of
-Gen1Recomp, Dramatic Shape Voxel Mod, Pokemon or their respective assets.
-
-Pokemon and related names are trademarks of their respective owners. This
-project is not affiliated with Nintendo, Game Freak, The Pokemon Company,
-Gen1Recomp or DramaticShape.
+The project retains the original copyright and MIT license notices. See
+[LICENSE](LICENSE). Pokemon and related names are trademarks of their
+respective owners; they do not sponsor or endorse this project.
