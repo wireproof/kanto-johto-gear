@@ -43,6 +43,11 @@ THEME.isGen2 = function()
   local info = version.info and version.info()
   return info and info.generation == 2 or false
 end
+THEME.isGen3 = function()
+  local version = require("src.core.GameVersion")
+  local info = version.info and version.info()
+  return info and info.generation == 3 or false
+end
 THEME.gearName = function()
   return THEME.isGen2() and "JOHTO GEAR" or "KANTO GEAR"
 end
@@ -1343,6 +1348,7 @@ return function(mod)
   end
 
   local function screenById(id)
+    if THEME.isGen3() then return nil end
     local states = game and game.stack and game.stack.states or {}
     for i = #states, 1, -1 do
       if states[i].screenId == id then return states[i] end
@@ -1357,6 +1363,7 @@ return function(mod)
   end
 
   local function pcList()
+    if THEME.isGen3() then return nil end
     local states = game and game.stack and game.stack.states or {}
     for i = #states, 1, -1 do
       if pcListKind(states[i]) then return states[i] end
@@ -1364,6 +1371,7 @@ return function(mod)
   end
 
   local function battleState()
+    if THEME.isGen3() then return nil end
     local states = game and game.stack and game.stack.states or {}
     for i = #states, 1, -1 do
       if states[i].isBattleState then return states[i] end
@@ -1371,6 +1379,15 @@ return function(mod)
   end
 
   local function screenState()
+    if THEME.isGen3() then
+      if not (game and game.phase == "field" and game.session) then
+        worldStarted = false
+        return "title", nil, 0
+      end
+      worldStarted = true
+      if externalLoading then return "loading", nil, 0.72 end
+      return "active", nil, 0
+    end
     local top = game and game.stack and game.stack:top()
     local world = game and game.overworld
     if not (world and stackHas(world)) then
@@ -1395,6 +1412,7 @@ return function(mod)
   end
 
   local function dialogueChoice()
+    if THEME.isGen3() then return nil end
     local top = game and game.stack and game.stack:top()
     if not top then return end
     if top.onChoose and top.index and not top.items then

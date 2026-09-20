@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-beta.5
+
+- Treat a live FireRed field/session as active play instead of waiting for the
+  Gen I/II overworld-state stack that FireRed does not use.
+- Avoid querying Gen I/II modal-state helpers while FireRed owns the session.
+
 ## 1.0.0-beta.4
 
 - Enable the host companion-display bridge when Gear first receives it, so

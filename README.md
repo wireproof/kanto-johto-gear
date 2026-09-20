@@ -18,10 +18,9 @@ Generation II.
 
 ## Current release
 
-**1.0.0-beta.4** enables the host's companion-display bridge automatically,
-including the AYN Thor lower screen. It is a beta because the Android bridge
-and mod pass automated tests but still need broader testing on physical
-dual-screen devices.
+**1.0.0-beta.5** recognizes active FireRed field play on the companion screen,
+instead of leaving the lower AYN Thor panel on the pre-game link message. It
+is a beta while the expanded FireRed companion pages receive hardware testing.
 
 | Game | Region support | Status |
 | --- | --- | --- |
@@ -99,6 +98,7 @@ in hardware bug reports.
 
 This fork starts fresh at `1.0.0-beta.1` and follows semantic versioning:
 
+- `1.0.0-beta.5` — recognize FireRed field play on the companion display.
 - `1.0.0-beta.4` — enable the host dual-display bridge from the Gear mod.
 - `1.0.0-beta.3` — mobile readback compatibility and seven-game verification.
 - `1.0.0` — first stable release.

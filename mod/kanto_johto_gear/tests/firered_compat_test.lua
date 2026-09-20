@@ -29,6 +29,10 @@ T.eq(hooks:depth("render.compose"), 1,
   "FireRed Gear uses the shared compositor seam")
 T.eq(hooks:depth("render.output"), 1,
   "FireRed Gear can swap the final game frame")
+local source = assert(io.open(path .. "/main.lua", "rb")):read("*a")
+T.check(source:find('game.phase == "field"', 1, true)
+    and source:find("THEME.isGen3()", 1, true),
+  "FireRed field play leaves the companion title screen")
 
 run.release()
 T.finish("Kanto + Johto Gear FireRed compatibility")
