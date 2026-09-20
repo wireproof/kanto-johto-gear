@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-beta.4
+
+- Enable the host companion-display bridge when Gear first receives it, so
+  Android display discovery and AYN Thor `Screen-2` presentation can start.
+- Keep bridge activation idempotent across render frames.
+
 ## 1.0.0-beta.3
 
 - Add a synchronous canvas-readback fallback for LÖVE 11 mobile builds while

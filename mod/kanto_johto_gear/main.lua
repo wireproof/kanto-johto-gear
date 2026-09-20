@@ -3798,6 +3798,14 @@ return function(mod)
   mod.hooks:wrap("render.compose", function(next, renderer, context)
     local handled = next(renderer, context)
     companion = context and context.secondScreen
+    -- The host exposes the secondary-display bridge to render hooks, but it
+    -- deliberately leaves the Android listener disabled until a consumer opts
+    -- in.  Enable it as soon as Gear sees the bridge so AYN Screen-2 can be
+    -- discovered before the first companion frame is composed.
+    if companion and companion.setEnabled
+        and not companion._kantoJohtoGearEnabled then
+      companion._kantoJohtoGearEnabled = pcall(companion.setEnabled, true)
+    end
     if textSpeedReleasePending then
       textSpeedReleasePending = false
       holdTextSpeed(false)

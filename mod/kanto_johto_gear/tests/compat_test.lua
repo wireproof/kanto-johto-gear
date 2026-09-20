@@ -73,13 +73,25 @@ T.eq(modernMenu[2].label, gen2 and "JOHTO GEAR" or "KANTO GEAR",
   "menu branding follows the active game generation")
 T.check(type(modernMenu[2].onSelect) == "function",
   "Kanto + Johto Gear menu row opens its existing options")
+local bridgeEnableCalls = 0
+local bridge = {
+  setEnabled = function(on)
+    if on then bridgeEnableCalls = bridgeEnableCalls + 1 end
+  end,
+  detected = function() return false end,
+  pollTouch = function() return nil end,
+}
 local composed = run.loader.hooks:call("render.compose",
   function() return "upstream" end, {}, {
-    secondScreen = { detected = function() return false end,
-                     pollTouch = function() return nil end },
+    secondScreen = bridge,
   })
 T.eq(composed, "upstream",
   "Kanto + Johto Gear preserves the upstream compositor result")
+run.loader.hooks:call("render.compose", function() return false end, {}, {
+  secondScreen = bridge,
+})
+T.eq(bridgeEnableCalls, 1,
+  "Kanto + Johto Gear enables the host companion bridge exactly once")
 
 local displayDetected = true
 run.loader.hooks:call("render.compose", function() return false end, {}, {
