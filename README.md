@@ -18,7 +18,7 @@ Generation II.
 
 ## Current release
 
-**1.0.0-beta.2** adds explicit Crystal and FireRed host support to this fork's
+**1.0.0-beta.3** adds explicit Crystal and FireRed host support to this fork's
 independent version
 series. It is a beta because the Android bridge and mod pass automated tests
 but still need broader testing on physical dual-screen devices.
@@ -99,7 +99,7 @@ in hardware bug reports.
 
 This fork starts fresh at `1.0.0-beta.1` and follows semantic versioning:
 
-- `1.0.0-beta.2` — another beta fix release.
+- `1.0.0-beta.3` — mobile readback compatibility and seven-game verification.
 - `1.0.0` — first stable release.
 - `1.1.0` — backward-compatible feature release.
 - `2.0.0` — release containing breaking changes.

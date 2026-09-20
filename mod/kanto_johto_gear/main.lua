@@ -18,6 +18,25 @@ local THEME = {
   blue = { 52 / 255, 53 / 255, 143 / 255, 1 },
   white = { 248 / 255, 249 / 255, 252 / 255, 1 },
 }
+THEME.syncReadbacks = setmetatable({}, { __mode = "k" })
+THEME.hasAsyncReadback = function(target)
+  return type(target.requestImageData) == "function"
+    and type(target.pollImageData) == "function"
+end
+THEME.requestImageData = function(target)
+  if THEME.hasAsyncReadback(target) then return target:requestImageData() end
+  if type(target.newImageData) ~= "function" then return false end
+  local ok, image = pcall(target.newImageData, target)
+  if not ok or not image then return false end
+  THEME.syncReadbacks[target] = image
+  return true
+end
+THEME.pollImageData = function(target)
+  if THEME.hasAsyncReadback(target) then return target:pollImageData() end
+  local image = THEME.syncReadbacks[target]
+  THEME.syncReadbacks[target] = nil
+  return image
+end
 THEME.isGen2 = function()
   local version = require("src.core.GameVersion")
   if version.isGen2 then return version.isGen2() end
@@ -831,9 +850,8 @@ return function(mod)
 
   local canvas = G.newCanvas(WIDTH, HEIGHT, { dpiscale = 1 })
   canvas:setFilter("nearest", "nearest")
-  if not canvas.requestImageData or not canvas.pollImageData then
-    mod.log:warn("host has no asynchronous display readback; mod stays inactive")
-    return
+  if not THEME.hasAsyncReadback(canvas) then
+    mod.log:warn("host has no asynchronous display readback; using synchronous fallback")
   end
   local game
   local companion
@@ -2654,7 +2672,7 @@ return function(mod)
   local function pumpDisplay()
     local shown = false
     if bottomOnHandheld() then
-      if readbackPending and canvas:pollImageData() then
+      if readbackPending and THEME.pollImageData(canvas) then
         readbackPending = false
       end
       if dirty then
@@ -2664,7 +2682,7 @@ return function(mod)
       return false
     end
     if readbackPending then
-      local image = canvas:pollImageData()
+      local image = THEME.pollImageData(canvas)
       if image then
         shown = companion.push(image, WIDTH, HEIGHT, SECONDARY_BACKGROUND,
           displayPreference())
@@ -2678,7 +2696,7 @@ return function(mod)
     end
     if not readbackPending and dirty then
       draw()
-      if canvas:requestImageData() then
+      if THEME.requestImageData(canvas) then
         readbackPending = true
         dirty = false
       end
@@ -3602,7 +3620,7 @@ return function(mod)
     local now = love.timer.getTime()
     if gameReadbackPending and gameReadbackCanvas
         and now >= nextPresentAttempt then
-      local image = gameReadbackCanvas:pollImageData()
+      local image = THEME.pollImageData(gameReadbackCanvas)
       if image then
         local shown = companion.push(image, image:getWidth(), image:getHeight(),
           SECONDARY_BACKGROUND, "secondary:cover")
@@ -3637,7 +3655,7 @@ return function(mod)
       G.setColor(1, 1, 1, 1)
       G.draw(context.canvas, 0, 0, 0, cw / ww, ch / wh)
       G.pop()
-      if gameCaptureCanvas:requestImageData() then
+      if THEME.requestImageData(gameCaptureCanvas) then
         gameReadbackPending = true
         gameReadbackCanvas = gameCaptureCanvas
         nextGameCapture = now + 1 / 60
@@ -3875,7 +3893,7 @@ return function(mod)
         mod.log:info("screen disconnected: restored saved layout")
       end
       if gameReadbackPending and gameReadbackCanvas
-          and gameReadbackCanvas:pollImageData() then
+          and THEME.pollImageData(gameReadbackCanvas) then
         gameReadbackPending = false
         gameReadbackCanvas = nil
       end

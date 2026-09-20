@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-beta.3
+
+- Add a synchronous canvas-readback fallback for LÖVE 11 mobile builds while
+  retaining asynchronous readback on LÖVE 12 hosts.
+- Verify real-ROM startup alongside Dramatic Shape on all seven supported
+  games.
+
 ## 1.0.0-beta.2
 
 - Declare Red, Blue, Yellow, Gold, Silver, Crystal, and FireRed explicitly.
