@@ -1,7 +1,8 @@
 # Kanto + Johto Gear
 
 Kanto + Johto Gear is an unofficial dual-screen companion mod for supported
-Gen1Recomp and Gen2Recomped Android hosts. It keeps the game on one display
+Gen1Recomp++ Android hosts across Red, Blue, Yellow, Gold, Silver, Crystal,
+and FireRed. It keeps the game on one display
 while maps, party information, battles, PC menus and contextual touch controls
 use the second display.
 
@@ -12,12 +13,13 @@ use the second display.
 > ROM-extracted game data is included.
 
 The public project uses one combined name. In-game, the compact companion
-header changes to **KANTO GEAR** for Generation I and **JOHTO GEAR** for
+header changes to **KANTO GEAR** for Kanto games and **JOHTO GEAR** for
 Generation II.
 
 ## Current release
 
-**1.0.0-beta.1** is the first release in this fork's independent version
+**1.0.0-beta.2** adds explicit Crystal and FireRed host support to this fork's
+independent version
 series. It is a beta because the Android bridge and mod pass automated tests
 but still need broader testing on physical dual-screen devices.
 

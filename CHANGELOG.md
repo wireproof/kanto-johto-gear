@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-beta.2
+
+- Declare Red, Blue, Yellow, Gold, Silver, Crystal, and FireRed explicitly.
+- Add a FireRed SDK compatibility test against the Gen III mod facades.
+
 ## 1.0.0-beta.1
 
 First release in the independent Kanto + Johto Gear version series.

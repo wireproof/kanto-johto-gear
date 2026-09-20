@@ -1,9 +1,11 @@
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
 local Version = require("src.core.GameVersion")
-assert(Version.set and Version.isGen2,
+assert(Version.set and Version.generation,
   "Johto compatibility test requires the Gen2Recomped host")
 Version.set("gold")
+assert(Version.generation() == 2,
+  "Johto compatibility test requires a Gen II game")
 
 local T = require("tests.modkit")
 local data = T.fixtures.load()

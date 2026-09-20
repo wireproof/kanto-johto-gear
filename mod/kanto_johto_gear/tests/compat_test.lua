@@ -68,7 +68,7 @@ T.eq(#modernMenu, 3, "Modern UI receives one Kanto + Johto Gear menu row")
 T.eq(modernMenu[2].id, "kanto_johto_gear.options",
   "Kanto + Johto Gear menu row is stable and anchored before MODS")
 local version = require("src.core.GameVersion")
-local gen2 = version.isGen2 and version.isGen2()
+local gen2 = version.generation and version.generation() == 2
 T.eq(modernMenu[2].label, gen2 and "JOHTO GEAR" or "KANTO GEAR",
   "menu branding follows the active game generation")
 T.check(type(modernMenu[2].onSelect) == "function",
