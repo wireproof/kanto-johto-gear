@@ -139,6 +139,111 @@ local function textTouch(top)
   if not top.choice then return "advance" end
 end
 
+local function utf8Chars(value)
+  local out = {}
+  for ch in tostring(value or ""):gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+    out[#out + 1] = ch
+  end
+  return out
+end
+
+function THEME.gen3NewGame(game)
+  return game and game.boot and game.boot.newGame or nil
+end
+
+function THEME.gen3NamingState(game)
+  local ok, Naming = pcall(require, "src.ui.game3.naming")
+  local snap = ok and Naming.gearSnapshot and Naming.gearSnapshot()
+  if not snap then return nil end
+  return {
+    screenId = "NamingScreen", glyphs = utf8Chars(snap.name),
+    row = snap.row, col = snap.col, _gearNaming = Naming,
+    grid = function() return snap.grid end,
+  }
+end
+
+function THEME.normalizedNamingState(top, game, isGen3)
+  if isGen3 then
+    local g3 = THEME.gen3NamingState(game)
+    if g3 then return g3 end
+  end
+  local isGen2Naming = top and type(top.rows) == "function"
+    and type(top.bottomRow) == "function"
+    and type(top.bottomTarget) == "function"
+    and type(top.addCharacter) == "function"
+  if not top or (top.screenId ~= "NamingScreen" and not isGen2Naming) then
+    return nil
+  end
+  if isGen2Naming then
+    local grid = {}
+    for r, cells in ipairs(top:rows()) do
+      grid[r] = {}
+      for c, label in ipairs(cells) do grid[r][c] = label end
+    end
+    grid[#grid + 1] = { top.lower and "UPPER" or "lower", "DEL", "END" }
+    return {
+      screenId = "NamingScreen", glyphs = utf8Chars(top.text),
+      row = top.row + 1,
+      col = top:onBottomRow() and top:bottomTarget() or top.col + 1,
+      _gen2Naming = top, grid = function() return grid end,
+    }
+  end
+  return top
+end
+
+function THEME.gen3ChoiceState(game, mod)
+  local ok, Choice = pcall(require, "src.ui.game3.choice")
+  if ok and Choice.active and type(Choice.options) == "table" then
+    return { index = Choice.cursor, items = Choice.options,
+      _set = function(i) Choice.cursor = i end,
+      _confirm = function() Choice.confirm() end }
+  end
+  local scene = THEME.gen3NewGame(game)
+  local menu = scene and scene.win and scene.win.menu
+  if not (menu and type(menu.items) == "table") then return nil end
+  local labels = {}
+  for i, item in ipairs(menu.items) do labels[i] = item[1] or tostring(i) end
+  return { index = (menu.cursor or 0) + 1, items = labels,
+    _set = function(i) menu.cursor = i - 1 end,
+    _confirm = function() mod.input:tap(game, "a") end }
+end
+
+function THEME.gen3TextBoxState(game)
+  local ok, Message = pcall(require, "src.ui.game3.message")
+  if ok and Message.isOpen and Message.isOpen() then
+    local waiting = Message.isWaiting and Message.isWaiting()
+    return { isTextBox = true, waiting = waiting, done = waiting,
+      choice = false }
+  end
+  local scene = THEME.gen3NewGame(game)
+  local printer = scene and scene.printer
+  if printer and printer.active then
+    local waiting = printer.state == "clear"
+    return { isTextBox = true, waiting = waiting, done = waiting,
+      choice = false }
+  end
+end
+
+function THEME.gen3BattleOverlayState()
+  local okBag, BagMenu = pcall(require, "src.ui.game3.bag_menu")
+  if okBag and BagMenu.isOpen and BagMenu.isOpen() then
+    local items = {}
+    for _, row in ipairs(BagMenu.list and BagMenu.list() or {}) do
+      items[#items + 1] = { label = row.name or tostring(row.id),
+        value = row.id, right = "x" .. tostring(row.qty or 0) }
+    end
+    items[#items + 1] = { label = "CANCEL", value = "cancel", right = "" }
+    return { kind = "bag", items = items, index = BagMenu.cursor or 1,
+      title = BagMenu.currentPocket and BagMenu.currentPocket() or "ITEMS",
+      native = BagMenu }
+  end
+  local okParty, PartyMenu3 = pcall(require, "src.ui.game3.party_menu")
+  if okParty and PartyMenu3.isOpen and PartyMenu3.isOpen() then
+    return { kind = "party", index = PartyMenu3.cursor or 1,
+      native = PartyMenu3 }
+  end
+end
+
 local function textPrompt(top)
   return textTouch(top) == "advance" and "TAP TO CONTINUE" or nil
 end
@@ -898,7 +1003,10 @@ return function(mod)
   local intentId = 0
   local nextPoll = 0
   local nextClock = 0
-  local batteryAnimated = false
+  local runtimeFlags = {
+    batteryAnimated = false, loggedTick = false,
+    loggedPresent = false, bridgeWarned = false,
+  }
   local lastScreenKey = nil
   local worldStarted = false
   local externalLoading = false
@@ -912,9 +1020,6 @@ return function(mod)
   local choiceReadyAt = 0
   local choiceNudgeUntil = 0
   local choiceCommitted = nil
-  local loggedTick = false
-  local loggedPresent = false
-  local bridgeWarned = false
   local displayReady = false
   local nextPresentAttempt = 0
   local themeKey = nil
@@ -1297,8 +1402,8 @@ return function(mod)
     local low = isLowBattery(state, percent)
     local charging = state == "charging"
     local animated = low or charging
-    if animated ~= batteryAnimated then nextClock = 0 end
-    batteryAnimated = animated
+    if animated ~= runtimeFlags.batteryAnimated then nextClock = 0 end
+    runtimeFlags.batteryAnimated = animated
     box("line", x + 0.5, 6.5, 12, 7, foreground)
     box("fill", x + 12, 9, 2, 3, foreground)
     local tick = math.floor(love.timer.getTime())
@@ -1386,12 +1491,21 @@ return function(mod)
 
   local function screenState()
     if THEME.isGen3() then
+      local naming = THEME.gen3NamingState(game)
+      local choice = THEME.gen3ChoiceState(game, mod)
+      local textBox = THEME.gen3TextBoxState(game)
       if not (game and game.phase == "field" and game.session) then
         worldStarted = false
+        if naming then return "locked", naming, 0 end
+        if choice then return "locked", choice, 0 end
+        if textBox then return "textbox", textBox, 0.58 end
         return "title", nil, 0
       end
       worldStarted = true
       if externalLoading then return "loading", nil, 0.72 end
+      if naming then return "locked", naming, 0 end
+      if choice then return "locked", choice, 0 end
+      if textBox then return "textbox", textBox, 0.58 end
       return "active", nil, 0
     end
     local top = game and game.stack and game.stack:top()
@@ -1409,12 +1523,16 @@ return function(mod)
       if top == nil or top == world then return "active", top, 0 end
       return "locked", top, 0.58
     end
-    if not (world and stackHas(world)) then
+    if not world then
       worldStarted = false
       return "title", top, 0
     end
     if not worldStarted then
-      if top ~= world then return "title", top, 0 end
+      -- Some release facades do not expose the backing states array even
+      -- though the live top state is the overworld. The map.entered event
+      -- also latches this below, so Red cannot fall back to START GAME ABOVE
+      -- after opening and closing a menu.
+      if top ~= world and not stackHas(world) then return "title", top, 0 end
       worldStarted = true
     end
     if world.transitioning then
@@ -1431,7 +1549,11 @@ return function(mod)
   end
 
   local function dialogueChoice()
-    if THEME.isGen3() then return nil end
+    if THEME.isGen3() then
+      local choice = THEME.gen3ChoiceState(game, mod)
+      if choice then return choice, choice.items end
+      return nil
+    end
     local top = game and game.stack and game.stack:top()
     if not top then return end
     if top.onChoose and top.index and not top.items then
@@ -1628,6 +1750,40 @@ return function(mod)
       and #flyTargets() > 0
   end
 
+  local function drawOverviewFallback()
+    if not (mod.world and mod.world.mapOverview) then return false end
+    local overview = mod.world:mapOverview()
+    local rows = overview and (overview.tileRows or overview.rows)
+    if not (rows and #rows > 0) then return false end
+    local width = overview.tileRows and overview.tileWidth or overview.width
+    local height = overview.tileRows and overview.tileHeight or overview.height
+    if not (width and height and width > 0 and height > 0) then return false end
+    local scale = math.min(150 / width, 100 / height)
+    local ox = math.floor((WIDTH - width * scale) / 2)
+    local oy = HEADER + math.floor((104 - height * scale) / 2)
+    local shades = { PAPER, MID, DARK, INK }
+    for y, row in ipairs(rows) do
+      for x = 1, #row do
+        local ch = row:sub(x, x)
+        local index = tonumber(ch)
+        if index == nil then
+          index = ch == " " and 0 or ch == "~" and 1 or ch == "+" and 3 or 2
+        end
+        box("fill", ox + (x - 1) * scale, oy + (y - 1) * scale,
+            math.max(1, scale), math.max(1, scale), shades[index + 1])
+      end
+    end
+    local pos = mod.world.current and mod.world:current()
+    if pos and pos.x and pos.y then
+      local factor = overview.tileRows and 2 or 1
+      local px = ox + (pos.x * factor + factor / 2) * scale
+      local py = oy + (pos.y * factor + factor / 2) * scale
+      box("fill", px - 2, py - 2, 5, 5, PAPER)
+      outline(px - 2, py - 2, 5, 5, INK)
+    end
+    return true
+  end
+
   local function drawMap()
     local asset = loadMap()
     if asset and asset.full then
@@ -1657,7 +1813,7 @@ return function(mod)
         box("fill", px + 0.5, py + 0.5, 5, 5, PAPER)
         outline(px + 0.5, py + 0.5, 5, 5, INK)
       end
-    else
+    elseif not drawOverviewFallback() then
       drawMapFallback()
     end
     local region = asset and asset.region
@@ -2544,12 +2700,17 @@ return function(mod)
   local function drawBattle()
     local top = game and game.stack and game.stack:top()
     local raw = battleState()
+    local gen3Overlay = THEME.gen3BattleOverlayState()
     local party = top and top.isPartyMenu and top
     local bag = top and top.screenId == "BagMenu" and top
     local ppMoves = top and top.kind == "pp_item_move" and top
     local summary = top and top.screenId == "SummaryMenu"
       and screenById("PartyMenu") and top
-    if ppMoves then
+    if gen3Overlay and gen3Overlay.kind == "bag" then
+      drawBattleItems(gen3Overlay)
+    elseif gen3Overlay and gen3Overlay.kind == "party" then
+      drawParty(battle.party or {}, "PARTY", true, nil, gen3Overlay.index)
+    elseif ppMoves then
       drawPpItemMoves(ppMoves)
     elseif party then
       drawBattleParty(party)
@@ -2638,7 +2799,7 @@ return function(mod)
     local learn = screenById("MoveLearnMenu")
     local pcKind, pcRoot = pcSession()
     local choice, labels = dialogueChoice()
-    local naming = top and top.screenId == "NamingScreen" and top
+    local naming = THEME.normalizedNamingState(top, game, THEME.isGen3())
     local levelStats = battle and levelUpStatBox(top) and top
     local idleSummary = top and top.screenId == "SummaryMenu"
       and not battle and not pcKind and top
@@ -2913,6 +3074,34 @@ return function(mod)
 
   local function tapBattle(x, y)
     local top = game and game.stack and game.stack:top()
+    local gen3Overlay = THEME.gen3BattleOverlayState()
+    if gen3Overlay and gen3Overlay.kind == "bag" then
+      if y < HEADER and x < 24 then
+        press("b")
+      else
+        local first, count = choiceWindow(gen3Overlay.items, gen3Overlay.index)
+        local row = math.floor((y - 25) / 28) + 1
+        if x >= 8 and x < 152 and row >= 1 and row <= count then
+          gen3Overlay.native.cursor = first + row - 1
+          press("a")
+        end
+      end
+      dirty = true
+      return
+    elseif gen3Overlay and gen3Overlay.kind == "party" then
+      if y < HEADER and x < 24 then
+        press("b")
+      elseif y >= 23 then
+        local col, row = x >= 81 and 1 or 0, math.floor((y - 23) / 39)
+        local slot = row * 2 + col + 1
+        if (battle.party or {})[slot] then
+          gen3Overlay.native.cursor = slot
+          press("a")
+        end
+      end
+      dirty = true
+      return
+    end
     if top and top.kind == "pp_item_move" then
       if y < HEADER and x < 24 then
         press("b")
@@ -3031,6 +3220,12 @@ return function(mod)
       choice = row * 2 + col + 1
     end
     if not choice then return end
+    if THEME.isGen3() then
+      local kind = ({ "fight", "party", "item", "run" })[choice]
+      if kind then submit("menu", { choice = kind }) end
+      dirty = true
+      return
+    end
     local raw = battleState()
     if raw and game.stack:top() == raw then
       raw.menuIndex = choice
@@ -3162,15 +3357,32 @@ return function(mod)
       end
     end
     if not selected then return end
-    top.index = selected
+    if top._set then top._set(selected) else top.index = selected end
     if top.clampScroll then top:clampScroll() end
     choiceCommitted = top
-    press("a")
+    if top._confirm then top._confirm() else press("a") end
   end
 
   local function tapNaming(top, x, y)
     local row, col = namingCell(x, y, top:grid())
     if not row then return end
+    if top._gearNaming and top._gearNaming.gearSelect then
+      top._gearNaming.gearSelect(row, col)
+      dirty = true
+      return
+    end
+    if top._gen2Naming then
+      local native = top._gen2Naming
+      if row == #top:grid() then
+        native.row = native:bottomRow()
+        native.col = (math.max(1, math.min(3, col)) - 1) * 3
+      else
+        native.row, native.col = row - 1, col - 1
+      end
+      press("a")
+      dirty = true
+      return
+    end
     top.row, top.col = row, col
     press("a")
     dirty = true
@@ -3309,8 +3521,9 @@ return function(mod)
       return
     end
     local mode, top = screenState()
-    if top and top.screenId == "NamingScreen" then
-      tapNaming(top, x, y)
+    local naming = THEME.normalizedNamingState(top, game, THEME.isGen3())
+    if naming then
+      tapNaming(naming, x, y)
       return
     end
     if mode == "title" then
@@ -3517,7 +3730,7 @@ return function(mod)
         pageSwipe = pageSwipeAllowed(mode, battle),
         textSpeed = speed,
         input = mode == "title" or mode == "active" or mode == "textbox" or battle
-          or (top and top.screenId == "NamingScreen") or dialogueChoice()
+          or THEME.normalizedNamingState(top, game, THEME.isGen3()) or dialogueChoice()
           or (top and top.screenId == "SummaryMenu")
           or screenById("MoveLearnMenu") or pcSession() }
       if speed then holdTextSpeed(true) end
@@ -3595,6 +3808,7 @@ return function(mod)
   mod.events:on("save.loaded", reloadSteps)
 
   mod.events:on("map.entered", function(payload)
+    worldStarted = true
     mapId, pendingFly, pendingAction, fieldChoice, dirty =
       payload.mapId, nil, nil, nil, true
     mapAsset = nil
@@ -3728,6 +3942,10 @@ return function(mod)
     G.setColor(1, 1, 1, 1)
     G.draw(canvas, dx, dy, 0, scale, scale)
     G.pop()
+    -- render.output is the final window pass. Do not restore a viewport or
+    -- present canvas captured by push("all"); LÖVE cannot present while one
+    -- remains bound.
+    G.setCanvas()
     return true
   end, 1000)
 
@@ -3768,14 +3986,24 @@ return function(mod)
     if page == "TRAINER" or page == "LOCAL" then dirty = true end
   end)
 
-  for _, event in ipairs({ "world.block_replaced", "map.reloaded", "screen.pushed" }) do
-    mod.events:on(event, function(payload)
+  mod.events:on("world.block_replaced", function(payload)
+    if not payload or not payload.mapId or payload.mapId == mapId then
+      invalidateLocalMap()
+      dirty = true
+    end
+  end)
+  mod.events:on("map.reloaded", function(payload)
+    if not payload or not payload.mapId or payload.mapId == mapId then
+      invalidateLocalMap()
+      dirty = true
+    end
+  end)
+  mod.events:on("screen.pushed", function(payload)
       if not payload or not payload.mapId or payload.mapId == mapId then
         invalidateLocalMap()
         dirty = true
       end
-    end)
-  end
+  end)
 
   mod.hooks:wrap("battle.bottom_ui_visible", function(next, state)
     if next(state) == false then return false end
@@ -3859,15 +4087,15 @@ return function(mod)
       holdTextSpeed(false)
     end
     if not companion or not companion.detected or not companion.pollTouch then
-      if not bridgeWarned then
-        bridgeWarned = true
+      if not runtimeFlags.bridgeWarned then
+        runtimeFlags.bridgeWarned = true
         mod.log:warn("host SecondScreen bridge has no companion touch support")
       end
       return handled
     end
     if not active then return handled end
-    if not loggedTick then
-      loggedTick = true
+    if not runtimeFlags.loggedTick then
+      runtimeFlags.loggedTick = true
       mod.log:info("display available=%s", tostring(hasDisplay()))
     end
 
@@ -3938,7 +4166,7 @@ return function(mod)
     if now >= nextClock then
       local title = screenState() == "title"
       nextClock = now + (title and 0.5
-        or batteryAnimated and 1 or 5)
+        or runtimeFlags.batteryAnimated and 1 or 5)
       dirty = true
     end
     local displayAvailable = hasDisplay()
@@ -3964,8 +4192,8 @@ return function(mod)
     elseif (dirty or readbackPending) and (readbackPending or displayAvailable
         or now >= nextPresentAttempt) then
       local shown = pumpDisplay()
-      if shown and not loggedPresent then
-        loggedPresent = true
+      if shown and not runtimeFlags.loggedPresent then
+        runtimeFlags.loggedPresent = true
         mod.log:info("first frame submitted=true")
       end
     end

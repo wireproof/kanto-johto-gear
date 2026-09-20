@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-beta.7
+
+- Add FireRed companion touch, naming, choices, dialogue, battle-root, bag,
+  party, and live local-map adapters.
+- Recognize Gold/Silver/Crystal's native naming screen on the companion.
+- Leave the window canvas unbound after handheld composition to prevent the
+  Android `present` crash.
+
 ## 1.0.0-beta.6
 
 - Detect the active generation from the live game service owner, preventing
