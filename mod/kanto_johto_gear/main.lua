@@ -1024,6 +1024,19 @@ return function(mod)
   local nextPresentAttempt = 0
   local themeKey = nil
 
+  local function attachCompanion(candidate)
+    if candidate then companion = candidate end
+    if not companion then
+      local ok, bridge = pcall(require, "src.render.SecondScreen")
+      if ok then companion = bridge end
+    end
+    if companion and companion.setEnabled
+        and not companion._kantoJohtoGearEnabled then
+      companion._kantoJohtoGearEnabled = pcall(companion.setEnabled, true)
+    end
+    return companion
+  end
+
   local function invalidateLocalMap()
     if localMapImage and localMapImage.release then localMapImage:release() end
     localMap, localMapImage = nil, nil
@@ -3780,6 +3793,11 @@ return function(mod)
 
   mod.events:on("game.ready", function(payload)
     game = payload.game
+    -- FireRed can reach its first field frame through a Generation-III
+    -- compositor path before every render wrapper has observed a context.
+    -- Opt in to Android's Presentation listener as part of game readiness so
+    -- Screen-2 attachment is not dependent on hook order.
+    attachCompanion()
     -- Resolve from the live service owner as well as GameVersion.  The mod
     -- sandbox may hand older compatibility facades a stale/default version;
     -- that made Game2 follow the Gen I stack test forever and left the Thor
@@ -4072,16 +4090,8 @@ return function(mod)
 
   -- Upstream owns the display seam; this mod only supplies its companion frame.
   mod.hooks:wrap("render.compose", function(next, renderer, context)
+    attachCompanion(context and context.secondScreen)
     local handled = next(renderer, context)
-    companion = context and context.secondScreen
-    -- The host exposes the secondary-display bridge to render hooks, but it
-    -- deliberately leaves the Android listener disabled until a consumer opts
-    -- in.  Enable it as soon as Gear sees the bridge so AYN Screen-2 can be
-    -- discovered before the first companion frame is composed.
-    if companion and companion.setEnabled
-        and not companion._kantoJohtoGearEnabled then
-      companion._kantoJohtoGearEnabled = pcall(companion.setEnabled, true)
-    end
     if textSpeedReleasePending then
       textSpeedReleasePending = false
       holdTextSpeed(false)

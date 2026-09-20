@@ -29,6 +29,19 @@ T.eq(hooks:depth("render.compose"), 1,
   "FireRed Gear uses the shared compositor seam")
 T.eq(hooks:depth("render.output"), 1,
   "FireRed Gear can swap the final game frame")
+local enabled, enabledBeforeNext = 0, false
+local bridge = {
+  setEnabled = function(on) if on then enabled = enabled + 1 end end,
+  detected = function() return false end,
+  pollTouch = function() return nil end,
+}
+run.loader.hooks:call("render.compose", function()
+  enabledBeforeNext = enabled == 1
+  return false
+end, {}, { secondScreen = bridge })
+T.eq(enabled, 1, "FireRed opts in to the Thor companion bridge")
+T.check(enabledBeforeNext,
+  "FireRed attaches Screen-2 before downstream composition runs")
 local source = assert(io.open(path .. "/main.lua", "rb")):read("*a")
 T.check(source:find('game.phase == "field"', 1, true)
     and source:find("THEME.isGen3()", 1, true),
