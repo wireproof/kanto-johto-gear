@@ -1389,7 +1389,20 @@ return function(mod)
       return "active", nil, 0
     end
     local top = game and game.stack and game.stack:top()
-    local world = game and game.overworld
+    local world = game and (game.overworld or game.world)
+    if THEME.isGen2() then
+      if not (world and world.map) then
+        worldStarted = false
+        return "title", top, 0
+      end
+      worldStarted = true
+      if world.transitioning then return "transition", top, 0.58 end
+      if externalLoading then return "loading", top, 0.72 end
+      if top and top.isTextBox then return "textbox", top, 0.58 end
+      if world.flyAnim or world.teleportOut then return "locked", top, 0.58 end
+      if top == nil or top == world then return "active", top, 0 end
+      return "locked", top, 0.58
+    end
     if not (world and stackHas(world)) then
       worldStarted = false
       return "title", top, 0
