@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-beta.6
+
+- Detect the active generation from the live game service owner, preventing
+  Gold, Silver, and Crystal from remaining on the startup companion screen.
+
 ## 1.0.0-beta.5
 
 - Treat a live FireRed field/session as active play instead of waiting for the

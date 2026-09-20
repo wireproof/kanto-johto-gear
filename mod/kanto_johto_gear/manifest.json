@@ -1,7 +1,7 @@
 {
   "id": "kanto_johto_gear",
   "name": "Kanto + Johto Gear",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "api": 2,
   "entry": "main.lua",
   "category": "UI",

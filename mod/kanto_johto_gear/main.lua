@@ -38,12 +38,18 @@ THEME.pollImageData = function(target)
   return image
 end
 THEME.isGen2 = function()
+  if THEME.runtimeGeneration ~= nil then
+    return THEME.runtimeGeneration == 2
+  end
   local version = require("src.core.GameVersion")
   if version.isGen2 then return version.isGen2() end
   local info = version.info and version.info()
   return info and info.generation == 2 or false
 end
 THEME.isGen3 = function()
+  if THEME.runtimeGeneration ~= nil then
+    return THEME.runtimeGeneration == 3
+  end
   local version = require("src.core.GameVersion")
   local info = version.info and version.info()
   return info and info.generation == 3 or false
@@ -3561,6 +3567,17 @@ return function(mod)
 
   mod.events:on("game.ready", function(payload)
     game = payload.game
+    -- Resolve from the live service owner as well as GameVersion.  The mod
+    -- sandbox may hand older compatibility facades a stale/default version;
+    -- that made Game2 follow the Gen I stack test forever and left the Thor
+    -- companion on START GAME ABOVE except while a prompt was open.
+    if game and type(game.useSelectItem) == "function" then
+      THEME.runtimeGeneration = 2
+    elseif game and type(game._enterField) == "function" then
+      THEME.runtimeGeneration = 3
+    else
+      THEME.runtimeGeneration = 1
+    end
     spriteCache.__badges = nil
     refreshTheme(true)
     reloadSteps()
